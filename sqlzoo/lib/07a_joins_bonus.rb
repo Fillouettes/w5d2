@@ -103,7 +103,10 @@ def eponymous_albums
   # artist's name. Select the titles of all the eponymous albums.
   execute(<<-SQL)
     SELECT
-
+      DISTINCT title
+    FROM
+      albums
+    WHERE title = artist
   SQL
 end
 
@@ -111,6 +114,16 @@ def song_title_counts
   # Select the song names that appear on more than two albums. Also select the
   # COUNT of times they show up.
   execute(<<-SQL)
+    SELECT
+      song, COUNT(DISTINCT album)
+    FROM
+      tracks
+    JOIN
+      albums on albums.asin = tracks.album
+    GROUP BY
+      song
+    HAVING
+      COUNT(DISTINCT album) > 2
   SQL
 end
 
@@ -119,6 +132,16 @@ def best_value
   # pence. Find the good value albums - show the title, the price and the number
   # of tracks.
   execute(<<-SQL)
+    SELECT
+      albums.title, albums.price, COUNT(song)
+    FROM
+      albums
+    JOIN
+      tracks ON tracks.album = albums.asin
+    GROUP BY
+      albums.asin
+    HAVING
+      albums.price / COUNT(song) < 0.5
   SQL
 end
 
@@ -127,6 +150,18 @@ def top_track_counts
   # tracks. List the top 10 albums. Select both the album title and the track
   # count, and order by both track count and title (descending).
   execute(<<-SQL)
+    SELECT
+      albums.title, COUNT(tracks.song)
+    FROM
+      albums
+    JOIN
+      tracks ON albums.asin = tracks.album
+    GROUP BY
+      albums.asin
+    ORDER BY
+      COUNT(tracks.song) DESC, albums.title DESC
+    LIMIT
+      10
   SQL
 end
 
@@ -134,6 +169,21 @@ def rock_superstars
   # Select the artist who has recorded the most rock albums, as well as the
   # number of albums. HINT: use LIKE '%Rock%' in your query.
   execute(<<-SQL)
+      SELECT
+        artist, COUNT(DISTINCT asin)
+      FROM
+        albums
+      JOIN
+        styles ON asin = album
+      WHERE
+        styles.style LIKE '%Rock%'
+      GROUP BY
+        artist
+      ORDER BY
+        COUNT(*) DESC
+      LIMIT
+        1
+      
   SQL
 end
 
@@ -146,5 +196,19 @@ def expensive_tastes
   # subquery. Next, JOIN the styles table to this result and use aggregates to
   # determine the average price per track.
   execute(<<-SQL)
+    SELECT
+      style, (SUM(price) / COUNT(*)) AS avg_price
+    FROM
+      styles
+    JOIN
+      albums on album = asin
+    JOIN
+      tracks on tracks.album = asin
+    GROUP BY
+      style
+    ORDER BY
+      avg_price DESC
+    LIMIT
+      5
   SQL
 end
