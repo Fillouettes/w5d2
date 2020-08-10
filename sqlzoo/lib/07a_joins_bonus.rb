@@ -26,18 +26,42 @@ require_relative './sqlzoo.rb'
 def alison_artist
   # Select the name of the artist who recorded the song 'Alison'.
   execute(<<-SQL)
+    SELECT
+      artist
+    FROM
+      albums
+    JOIN
+      tracks ON tracks.album = albums.asin
+    WHERE
+      tracks.song = 'Alison'
   SQL
 end
 
 def exodus_artist
   # Select the name of the artist who recorded the song 'Exodus'.
   execute(<<-SQL)
+      SELECT
+      artist
+    FROM
+      albums
+    JOIN
+      tracks ON tracks.album = albums.asin
+    WHERE
+      tracks.song = 'Exodus'
   SQL
 end
 
 def blur_songs
   # Select the `song` for each `track` on the album `Blur`.
   execute(<<-SQL)
+    SELECT
+      song
+    FROM
+      tracks
+    JOIN
+      albums ON tracks.album = albums.asin
+    WHERE
+      albums.title = 'Blur'
   SQL
 end
 
@@ -46,13 +70,31 @@ def heart_tracks
   # the word 'Heart' (albums with no such tracks need not be shown). Order first by
   # the number of such tracks, then by album title.
   execute(<<-SQL)
-  SQL
+    SELECT
+      title, COUNT(DISTINCT song) AS num
+    FROM
+      albums
+    JOIN
+      tracks ON tracks.album = albums.asin
+    WHERE
+      tracks.song LIKE '%Heart%'
+    GROUP BY
+      title
+    HAVING
+      COUNT(song) > 0
+    ORDER BY
+      num DESC, title ASC
+    SQL
 end
 
 def title_tracks
-  # A 'title track' has a `song` that is the same as its album's `title`. Select
-  # the names of all the title tracks.
   execute(<<-SQL)
+    SELECT
+      DISTINCT song
+    FROM
+      tracks
+    JOIN
+      albums on albums.title = tracks.song
   SQL
 end
 
@@ -60,6 +102,8 @@ def eponymous_albums
   # An 'eponymous album' has a `title` that is the same as its recording
   # artist's name. Select the titles of all the eponymous albums.
   execute(<<-SQL)
+    SELECT
+
   SQL
 end
 
