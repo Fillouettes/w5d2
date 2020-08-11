@@ -197,18 +197,74 @@ def expensive_tastes
   # determine the average price per track.
   execute(<<-SQL)
     SELECT
-      style, (SUM(price) / COUNT(*)) AS avg_price
+      styles.style, (SUM(prices.price) / SUM(prices.track_count)) AS avg_price
     FROM
       styles
     JOIN
-      albums on album = asin
-    JOIN
-      tracks on tracks.album = asin
+      (SELECT
+        albums.*, COUNT(*) AS track_count
+      FROM
+        tracks
+      LEFT OUTER JOIN
+        albums ON albums.asin = tracks.album
+      WHERE
+        albums.price IS NOT NULL
+      GROUP BY
+        albums.asin) AS prices ON prices.asin = styles.album
     GROUP BY
       style
     ORDER BY
-      avg_price DESC
+      avg_price DESC, styles.style ASC
     LIMIT
       5
   SQL
 end
+
+
+#subquery: return price of each track
+# SELECT
+#   styles.style, AVG(track_price) AS avg_price
+# FROM
+#   styles
+# JOIN
+#   (SELECT
+#     albums.asin, albums.price / COUNT(tracks.song) AS track_price
+#   FROM
+#     tracks
+#   JOIN
+#     albums on albums.asin = tracks.album
+#   WHERE
+#     albums.price IS NOT NULL
+#   GROUP BY
+#     albums.asin) ON albums.asin = styles.album
+# GROUP BY
+#   style
+# ORDER BY
+#   avg_price DESC
+# LIMIT
+#   5
+
+
+
+# == Schema Information
+#
+# Table name: albums
+#
+#  asin        :string       not null, primary key
+#  title       :string
+#  artist      :string
+#  price       :float
+#  rdate       :date
+#  label       :string
+#  rank        :integer
+#
+# Table name: styles
+#
+# album        :string       not null
+# style        :string       not null
+#
+# Table name: tracks
+# album        :string       not null
+# disk         :integer      not null
+# posn         :integer      not null
+# song         :string
